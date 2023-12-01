@@ -1,1 +1,1 @@
-console.log("Hello via Bun!");
+let input = await Bun.file('../../input.txt').text();
