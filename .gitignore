@@ -1,0 +1,43 @@
+# rust
+debug/
+target/
+Cargo.lock
+**/*.rs.bk
+
+# haskell
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+.stack-work/
+cabal.project.local
+cabal.project.local~
+.HTF/
+.ghc.environment.*
+
+# zig
+zig-cache/
+zig-out/
+release/
+debug/
+build/
+build-*/
+docgen_tmp/
+
+# Bun and Node
+node_modules/
+
+.venv/
