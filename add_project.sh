@@ -60,7 +60,7 @@ if [ $# -ge 2 ]; then
             echo downloading input
             # shellcheck disable=SC1091
             source ../.venv/bin/activate
-            aocd "$1" 2022 > input.txt
+            aocd "$1" 2023 > input.txt
             ;;
         copy)
             if [ $# -eq 3 ]; then
