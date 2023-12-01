@@ -20,28 +20,25 @@ else
 fi
 
 # Check if second argument is supplied
-if [ $# -eq 2 ]; then
+if [ $# -ge 2 ]; then
     cd "day_$1" || exit
     case $2 in
         rs)
             # Rust specific setup
             echo copying rust projects
             cp -r ../templates/rust/ ./first_star
-            cp -r ../templates/rust/ ./second_star
             cd ../ || exit
             ;;
         hs)
             # Haskell specific setup
             echo copying haskell projects
             cp -r ../templates/haskell/ ./first_star
-            cp -r ../templates/haskell/ ./second_star
             cd ../ || exit
             ;;
         zig)
             # Zig specific setup
             echo copying zig projects
             cp -r ../templates/zig/ ./first_star
-            cp -r ../templates/zig/ ./second_star
             cd ../ || exit
             ;;
         node)
@@ -50,11 +47,6 @@ if [ $# -eq 2 ]; then
             cp -r ../templates/node/ ./first_star
             cd first_star/node || exit
             pnpm install
-            cd ../../ || exit
-            cp -r ../templates/node/ ./second_star
-            cd second_star/node || exit
-            pnpm install
-            cd ../../ || exit
             ;;
         bun)
             # Bun specific setup
@@ -62,11 +54,6 @@ if [ $# -eq 2 ]; then
             cp -r ../templates/bun/ ./first_star
             cd first_star/bun || exit
             bun install
-            cd ../../ || exit
-            cp -r ../templates/bun/ ./second_star
-            cd second_star/bun || exit
-            bun install
-            cd ../../ || exit
             ;;
         input)
             # Input specific setup
@@ -75,6 +62,39 @@ if [ $# -eq 2 ]; then
             source ../.venv/bin/activate
             aocd "$1" 2022 > input.txt
             ;;
+        copy)
+            if [ $# -eq 3 ]; then
+                case $3 in
+                    rs)
+                        echo copying rust projects
+                        cp -r ./first_star/rust/ ./second_star
+                        ;;
+                    hs)
+                        echo copying haskell projects
+                        cp -r ./first_star/haskell/ ./second_star
+                        ;;
+                    zig)
+                        echo copying zig projects
+                        cp -r ./first_star/zig/ ./second_star
+                        ;;
+                    node)
+                        echo copying node projects
+                        cp -r ./first_star/node/ ./second_star
+                        ;;
+                    bun)
+                        echo copying bun projects
+                        cp -r ./first_star/bun/ ./second_star
+                        ;;
+                    *)
+                        echo "Invalid language supplied"
+                        exit 1
+                        ;;
+                esac
+            else
+                echo "No language supplied for copying"
+                exit 1
+            fi
+            ;; 
         *)
             echo "Invalid language supplied"
             exit 1
