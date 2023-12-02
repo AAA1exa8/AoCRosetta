@@ -24,13 +24,13 @@ case $language in
         git stage first_star/haskell/package.yaml
         git stage first_star/haskell/haskell.cabal
         git stage first_star/haskell/stack.yaml
+        git stage first_star/haskell/stack.yaml.lock
         git stage first_star/haskell/app/Main.hs
-        git stage first_star/haskell/app/Lib.hs
         git stage second_star/haskell/package.yaml
         git stage second_star/haskell/haskell.cabal
         git stage second_star/haskell/stack.yaml
+        git stage second_star/haskell/stack.yaml.lock
         git stage second_star/haskell/app/Main.hs
-        git stage second_star/haskell/app/Lib.hs
         git commit -m "add haskell solution for day $day"
         ;;
     zig)
@@ -58,6 +58,11 @@ case $language in
         git stage second_star/bun/package.json
         git stage second_star/bun/tsconfig.json
         git commit -m "add bun solution for day $day"
+        ;;
+    input)
+        cd "day_$day" || exit
+        git stage input.txt
+        git commit -m "add input for day $day"
         ;;
     *)
         echo "Invalid language supplied"
