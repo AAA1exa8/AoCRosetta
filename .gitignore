@@ -41,4 +41,4 @@ docgen_tmp/
 node_modules/
 
 .venv/
-test.txt
+test*.txt
