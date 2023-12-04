@@ -27,11 +27,10 @@ const Engine = struct {
                 continue;
             }
             if (std.ascii.isDigit(c)) {
-                std.debug.print("{}\n", .{c - '0'});
                 if (!recording) {
                     try self.nums.append(Number{
                         .value = c - '0',
-                        .position = Position{ .x = line_num, .y = @as(u32, @truncate(i)) },
+                        .position = Position{ .y = line_num, .x = @as(u32, @truncate(i)) },
                         .num_of_digits = 1,
                     });
                     recording = true;
@@ -42,7 +41,7 @@ const Engine = struct {
                 }
             } else {
                 try self.symbols.append(Symbol{
-                    .position = Position{ .x = line_num, .y = @as(u32, @truncate(i)) },
+                    .position = Position{ .y = line_num, .x = @as(u32, @truncate(i)) },
                 });
                 recording = false;
             }
@@ -64,7 +63,7 @@ pub fn main() !void {
         engine.symbols.deinit();
     }
 
-    const input_file = try std.fs.cwd().openFile("../../test.txt", .{});
+    const input_file = try std.fs.cwd().openFile("../../input.txt", .{});
     defer input_file.close();
     var reader = input_file.reader();
     var buffer: [4096]u8 = undefined;
@@ -77,7 +76,6 @@ pub fn main() !void {
     var output: isize = 0;
     for (engine.nums.items) |*n| {
         for (engine.symbols.items) |*s| {
-            // the mistake is probably here
             if ((s.position.x >= n.position.x - 1) and
                 (s.position.x <= n.position.x + n.num_of_digits) and
                 (std.math.absCast(s.position.y - n.position.y) <= 1))
@@ -88,13 +86,4 @@ pub fn main() !void {
         }
     }
     std.debug.print("{}\n", .{output});
-    std.debug.print("Numbers:\n", .{});
-    for (engine.nums.items) |*n| {
-        std.debug.print("Value: {}, Position: ({}, {}), Number of digits: {}\n", .{ n.value, n.position.x, n.position.y, n.num_of_digits });
-    }
-
-    std.debug.print("Symbols:\n", .{});
-    for (engine.symbols.items) |*s| {
-        std.debug.print("Position: ({}, {})\n", .{ s.position.x, s.position.y });
-    }
 }
