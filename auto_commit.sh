@@ -59,11 +59,6 @@ case $language in
         git stage second_star/bun/tsconfig.json
         git commit -m "add bun solution for day $day"
         ;;
-    input)
-        cd "day_$day" || exit
-        git stage input.txt
-        git commit -m "add input for day $day"
-        ;;
     *)
         echo "Invalid language supplied"
         exit 1
