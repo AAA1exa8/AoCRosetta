@@ -13,9 +13,19 @@ fn main() {
         .collect::<Vec<_>>();
     let mut t_hands = Vec::new();
     for (hand, _) in &hands {
+        let mut hand = hand.clone();
+        hand.sort();
+        hand.reverse();
         let mut t_hand: Vec<u64> = Vec::new();
         t_hand.resize(13, 0);
-        for card in hand {
+        for card in &hand {
+            if *card == 1 {
+                // Find the index of the maximum value in t_hand
+                let max_index = t_hand.iter().enumerate().max_by_key(|&(_, item)| item).map(|(index, _)| index).unwrap_or(0);
+                // Add 1 to the highest element in t_hand
+                t_hand[max_index] += 1;
+                continue;
+            }
             t_hand[*card as usize - 2] += 1;
         }
         t_hand = t_hand.into_iter().filter(|x| *x != 0).collect();
@@ -60,6 +70,7 @@ fn main() {
 
 fn card_to_num(card: char) -> u64 {
     match card {
+        'J' => 1,
         '2' => 2,
         '3' => 3,
         '4' => 4,
@@ -69,7 +80,6 @@ fn card_to_num(card: char) -> u64 {
         '8' => 8,
         '9' => 9,
         'T' => 10,
-        'J' => 11,
         'Q' => 12,
         'K' => 13,
         'A' => 14,
