@@ -20,9 +20,7 @@ fn main() {
         t_hand.resize(13, 0);
         for card in &hand {
             if *card == 1 {
-                // Find the index of the maximum value in t_hand
                 let max_index = t_hand.iter().enumerate().max_by_key(|&(_, item)| item).map(|(index, _)| index).unwrap_or(0);
-                // Add 1 to the highest element in t_hand
                 t_hand[max_index] += 1;
                 continue;
             }
