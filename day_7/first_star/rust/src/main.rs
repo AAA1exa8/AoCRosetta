@@ -1,5 +1,5 @@
 fn main() {
-    let input = "../../test.txt";
+    let input = "../../input.txt";
     let input_file = std::fs::read_to_string(input).expect("Error reading input file");
     let hands = input_file
         .lines()
@@ -35,6 +35,7 @@ fn main() {
         };
         t_hands.push(t_hand);
     }
+    println!("{:?}",t_hands);
     let mut hands = hands
         .into_iter()
         .zip(t_hands.into_iter())
@@ -42,7 +43,7 @@ fn main() {
     hands.sort_by(|((cards, _), typed), ((cards2, _), typed2)| {
         let mut ord = typed.cmp(&typed2);
         if ord == std::cmp::Ordering::Equal {
-            for (card, card2) in cards.iter().rev().zip(cards2.iter().rev()) {
+            for (card, card2) in cards.iter().zip(cards2.iter()) {
                 ord = card.cmp(card2);
                 if ord != std::cmp::Ordering::Equal {
                     break;
