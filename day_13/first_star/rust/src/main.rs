@@ -1,56 +1,37 @@
 fn main() {
-    let input = "../../test.txt";
+    let input = "../../input.txt";
     let input_file = std::fs::read_to_string(input).expect("Error reading input file");
     let output = input_file
         .split("\n\n")
-        .map(|n| {
-            n.lines()
-                .map(|l| {
-                    l.chars()
-                        .enumerate()
-                        .filter(|(_, c)| *c == '#')
-                        .map(move |(x, _)| x)
-                        .collect::<Vec<_>>()
-                })
-                .collect::<Vec<_>>()
-        })
+        .map(|n| n.lines().collect::<Vec<_>>())
         .map(|n| find_reflection(&n))
         .sum::<usize>();
     println!("{}", output);
 }
 
-fn find_reflection(notes: &[Vec<usize>]) -> usize {
-    let mut prev_note = &Vec::new();
+fn find_reflection(notes: &[&str]) -> usize {
     let mut reflections = 0;
-    for (y, note) in notes.iter().enumerate() {
-        if y == 0 {
-            prev_note = note;
-            continue;
+    for y in 1..notes.len() {
+        if (0..y)
+            .filter(|&i| y + y - i - 1 < notes.len())
+            .all(|i| &notes[i] == &notes[y + y - i - 1])
+        {
+            reflections += y * 100;
+            return reflections;
         }
-        if reflection_eq(&note, &prev_note) {
-            // let mut found = false;
-            // for i in 0..y {
-            //     if y + y - i - 1 >= notes.len() {
-            //         continue;
-            //     }
-            //     if reflection_eq(&notes[i], &notes[y + y - i - 1]) {
-            //         println!("{:?} {:?}", notes[i],notes[y + y - i - 1]);
-            //     }else{
-            //         println!("No reflection found at {}", i);
-            //     }
-            // }
-            if (0..y)
-                .filter(|&i| y + y - i - 1 < notes.len())
-                .all(|i| reflection_eq(&notes[i], &notes[y + y - i - 1]))
-            {
-                reflections += y*100;
-            }
+    }
+    for x in 1..notes[0].len() {
+        if (0..x)
+            .filter(|&i| x + x - i - 1 < notes[0].len())
+            .all(|i| {
+                (0..notes.len()).all(|y| {
+                    &notes[y][i..i + 1] == &notes[y][x + x - i - 1..x + x - i]
+                })
+            })
+        {
+            reflections += x;
+            return reflections;
         }
-        prev_note = note;
     }
     reflections
-}
-
-fn reflection_eq(a: &[usize], b: &[usize]) -> bool {
-    a.iter().zip(b).all(|(a, b)| a == b)
 }
