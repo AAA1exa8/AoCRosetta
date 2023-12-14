@@ -11,41 +11,52 @@ fn main() {
             }
         }).collect()
     }).collect();
-    let rocks = rocks.into_iter().flat_map(|rock| shift_stones(rock)).collect::<Vec<_>>();
+    let dirs = [Direction::North, Direction::West, Direction::South, Direction::East];
+    let rocks = shift_stones(rocks, Direction::East);
     let output = rocks.iter().map(|rock| {
         match rock.rock_type {
             RockType::Round => stones.len() - rock.y,
             RockType::Cube => 0,
+            _ => panic!("Not a stone")
         }
     }).sum::<usize>();
     println!("{}", output)
 }
 
-fn shift_stones(stones: Vec<Rock>) -> Vec<Rock> {
+fn shift_stones(stones: Vec<Vec<Rock>>, dir: Direction) -> Vec<Rock> {
     let mut new_stones: Vec<Rock> = Vec::new();
-    for (i, stone) in stones.into_iter().enumerate() {
-        match stone.rock_type {
-            RockType::Round if i == 0 => {
-                new_stones.push(Rock{rock_type: RockType::Round, x: stone.x, y: 0});
-            },
-            RockType::Cube => {
-                new_stones.push(Rock { rock_type: RockType::Cube, x: stone.x, y: stone.y});
-            },
-            RockType::Round => {
-                new_stones.push(Rock { rock_type: RockType::Round, x: stone.x, y: new_stones.last().unwrap().y + 1});
+    for stoness in stones {
+        for (i, stone) in stoness.into_iter().enumerate() {
+            match stone.rock_type {
+                RockType::Round if i == 0 => {
+                    new_stones.push(Rock{rock_type: RockType::Round, x: stone.x, y: 0});
+                },
+                RockType::Cube => {
+                    new_stones.push(Rock { rock_type: RockType::Cube, x: stone.x, y: stone.y});
+                },
+                RockType::Round => {
+                    new_stones.push(Rock { rock_type: RockType::Round, x: stone.x, y: new_stones.last().unwrap().y + 1});
+                }
             }
         }
     }
     new_stones
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum RockType {
     Round,
     Cube
 }
 
-#[derive(Debug)]
+enum Direction {
+    North,
+    West,
+    South,
+    East
+}
+
+#[derive(Debug, Clone, Copy)]
 struct Rock {
     rock_type: RockType,
     x: usize,
