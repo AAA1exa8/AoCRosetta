@@ -1,30 +1,17 @@
+use std::collections::VecDeque;
+
 fn main() {
     let input = "../../input.txt";
     let input_file = std::fs::read_to_string(input).expect("Error reading input file");
-    let (rules, parts) = input_file.split_once("\n\n").unwrap();
+    let (rules, _) = input_file.split_once("\n\n").unwrap();
     let workflows = rules.lines().map(|w| parse_workflow(w)).collect::<Vec<_>>();
-    let parts = parts
-        .lines()
-        .map(|p| {
-            let p = p
-                .trim_start_matches('{')
-                .trim_end_matches('}')
-                .split(',')
-                .map(|g| g.split_once('=').unwrap().1.parse::<i64>().unwrap())
-                .collect::<Vec<_>>();
-            Part {
-                extreme: p[0],
-                musical: p[1],
-                aerodynamic: p[2],
-                shiny: p[3],
-            }
-        })
-        .collect::<Vec<_>>();
-    let output = parts
-        .iter()
-        .filter(|p| resolve_part(&workflows, "in".to_string(), p))
-        .map(|p| p.extreme + p.musical + p.aerodynamic + p.shiny)
-        .sum::<i64>();
+    let part = Part {
+        extreme: (1, 4000),
+        musical: (1, 4000),
+        aerodynamic: (1, 4000),
+        shiny: (1, 4000),
+    };
+    let output = resolve_part(&workflows, "in".to_string(), part);
     println!("{}", output);
 }
 
@@ -91,53 +78,150 @@ fn parse_rule(rule: &str) -> Rule {
     }
 }
 
-fn resolve_part(workflows: &[Workflow], workflow_name: String, part: &Part) -> bool {
-    let workflow = workflows
-        .iter()
-        .find(|w| w.name == workflow_name)
-        .expect(&format!("Workflow {} not found", workflow_name));
-    for rule in &workflow.rules {
-        if check_part(part, rule) {
-            match &rule.result {
-                Result::Forward(name) => {
-                    return resolve_part(workflows, name.to_string(), part);
-                }
-                Result::Accept => {
-                    return true;
-                }
-                Result::Reject => {
-                    return false;
+fn resolve_part(workflows: &[Workflow],initial: String, part: Part) -> i64 {
+    let mut queue: VecDeque<(String, Part)> = VecDeque::new();
+    queue.push_back((initial, part.clone()));
+    let mut total_accepted = 0;
+
+    while let Some((workflow_name, mut part_to_check)) = queue.pop_front() {
+        let workflow = workflows
+            .iter()
+            .find(|w| w.name == workflow_name)
+            .expect(&format!("Workflow {} not found", workflow_name));
+
+        for rule in &workflow.rules {
+            let mut parts = split_part(&part_to_check, rule).unwrap_or(vec![part_to_check.clone()]);
+            for partt in parts.iter_mut() {
+                if check_part(&partt, rule) {
+                    match &rule.result {
+                        Result::Forward(name) => {
+                                queue.push_back((name.to_string(), partt.clone()));
+
+                        }
+                        Result::Accept => {
+                            total_accepted += (partt.extreme.1 - partt.extreme.0 + 1)
+                                * (partt.musical.1 - partt.musical.0 + 1)
+                                * (partt.aerodynamic.1 - partt.aerodynamic.0 + 1)
+                                * (partt.shiny.1 - partt.shiny.0 + 1);
+                        }
+                        Result::Reject => {
+                            continue;
+                        }
+                    }
+                }else{
+                    part_to_check = partt.clone();
                 }
             }
         }
     }
-    panic!("No matching rule found for part {:?}", part);
+
+    total_accepted
+}
+
+fn split_part(part: &Part, rule: &Rule) -> Option<Vec<Part>> {
+    match &rule.action {
+        Action::Lt { typ, value } => {
+            let (lo, hi) = match typ {
+                Type::Extreme => part.extreme,
+                Type::Musical => part.musical,
+                Type::Aerodynamic => part.aerodynamic,
+                Type::Shiny => part.shiny,
+            };
+            if *value <= lo {
+                None
+            } else if *value < hi {
+                Some(vec![
+                    Part {
+                        extreme: if let Type::Extreme = typ { (lo, *value - 1) } else { part.extreme },
+                        musical: if let Type::Musical = typ { (lo, *value - 1) } else { part.musical },
+                        aerodynamic: if let Type::Aerodynamic = typ { (lo, *value - 1) } else { part.aerodynamic },
+                        shiny: if let Type::Shiny = typ { (lo, *value - 1) } else { part.shiny },
+                    },
+                    Part {
+                        extreme: if let Type::Extreme = typ { (*value, hi) } else { part.extreme },
+                        musical: if let Type::Musical = typ { (*value, hi) } else { part.musical },
+                        aerodynamic: if let Type::Aerodynamic = typ { (*value, hi) } else { part.aerodynamic },
+                        shiny: if let Type::Shiny = typ { (*value, hi) } else { part.shiny },
+                    },
+                ])
+            } else {
+                None
+            }
+        }
+        Action::Gt { typ, value } => {
+            let (lo, hi) = match typ {
+                Type::Extreme => part.extreme,
+                Type::Musical => part.musical,
+                Type::Aerodynamic => part.aerodynamic,
+                Type::Shiny => part.shiny,
+            };
+            if *value >= hi {
+                None
+            } else if *value > lo {
+                Some(vec![
+                    Part {
+                        extreme: if let Type::Extreme = typ { (lo, *value) } else { part.extreme },
+                        musical: if let Type::Musical = typ { (lo, *value) } else { part.musical },
+                        aerodynamic: if let Type::Aerodynamic = typ { (lo, *value) } else { part.aerodynamic },
+                        shiny: if let Type::Shiny = typ { (lo, *value) } else { part.shiny },
+                    },
+                    Part {
+                        extreme: if let Type::Extreme = typ { (*value + 1, hi) } else { part.extreme },
+                        musical: if let Type::Musical = typ { (*value + 1, hi) } else { part.musical },
+                        aerodynamic: if let Type::Aerodynamic = typ { (*value + 1, hi) } else { part.aerodynamic },
+                        shiny: if let Type::Shiny = typ { (*value + 1, hi) } else { part.shiny },
+                    },
+                ])
+            } else {
+                None
+            }
+        }
+        Action::None => None,
+    }
 }
 
 fn check_part(part: &Part, rule: &Rule) -> bool {
     match &rule.action {
-        Action::Lt { typ, value } => match typ {
-            Type::Extreme => part.extreme < *value,
-            Type::Musical => part.musical < *value,
-            Type::Aerodynamic => part.aerodynamic < *value,
-            Type::Shiny => part.shiny < *value,
-        },
-        Action::Gt { typ, value } => match typ {
-            Type::Extreme => part.extreme > *value,
-            Type::Musical => part.musical > *value,
-            Type::Aerodynamic => part.aerodynamic > *value,
-            Type::Shiny => part.shiny > *value,
-        },
+        Action::Lt { typ, value } => {
+            let (lo, hi) = match typ {
+                Type::Extreme => part.extreme,
+                Type::Musical => part.musical,
+                Type::Aerodynamic => part.aerodynamic,
+                Type::Shiny => part.shiny,
+            };
+            if *value <= lo {
+                return false;
+            }
+            if *value > hi {
+                return true;
+            }
+            true
+        }
+        Action::Gt { typ, value } => {
+            let (lo, hi) = match typ {
+                Type::Extreme => part.extreme,
+                Type::Musical => part.musical,
+                Type::Aerodynamic => part.aerodynamic,
+                Type::Shiny => part.shiny,
+            };
+            if *value >= hi {
+                return false;
+            }
+            if *value < lo {
+                return true;
+            }
+            true
+        }
         Action::None => true,
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Part {
-    extreme: i64,
-    musical: i64,
-    aerodynamic: i64,
-    shiny: i64,
+    extreme: (i64, i64),
+    musical: (i64, i64),
+    aerodynamic: (i64, i64),
+    shiny: (i64, i64),
 }
 
 #[derive(Debug)]
