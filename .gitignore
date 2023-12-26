@@ -43,3 +43,5 @@ node_modules/
 .venv/
 test*.txt
 input.txt
+index.js
+pnpm-lock.yaml

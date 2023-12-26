@@ -42,8 +42,14 @@ case $language in
         git commit -m "add zig solution for day $day"
         ;;
     node)
-        echo finish this one
-        exit 1
+        cd "day_$day" || exit
+        git stage first_star/node/index.ts
+        git stage first_star/node/package.json
+        git stage first_star/node/tsconfig.json
+        git stage second_star/node/index.ts
+        git stage second_star/node/package.json
+        git stage second_star/node/tsconfig.json
+        git commit -m "add node solution for day $day"
         ;;
     bun)
         cd "day_$day" || exit

@@ -45,7 +45,7 @@ if [ $# -ge 2 ]; then
             # Node.js specific setup
             echo copying node projects
             cp -r ../templates/node/ ./first_star
-            cp bun/index.ts first_star/node/index.ts
+            cp first_star/bun/index.ts first_star/node/index.ts
             cd first_star/node || exit
             pnpm install
             ;;
@@ -81,6 +81,7 @@ if [ $# -ge 2 ]; then
                     node)
                         echo copying node projects
                         cp -r ./first_star/node/ ./second_star
+                        cp second_star/bun/index.ts second_star/node/index.ts
                         ;;
                     bun)
                         echo copying bun projects
