@@ -28,6 +28,8 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 
+.idea
+
 # zig
 zig-cache/
 zig-out/
@@ -43,3 +45,10 @@ node_modules/
 .venv/
 test*.txt
 input.txt
+
+.gitignore
+2023/day_10/
+2023/day_12/
+2023/day_14/
+2023/day_17/
+
