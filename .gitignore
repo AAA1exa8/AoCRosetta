@@ -45,7 +45,7 @@ node_modules/
 .venv/
 test*.txt
 input.txt
-example.txt
+example*.txt
 
 .gitignore
 2023/day_10/
