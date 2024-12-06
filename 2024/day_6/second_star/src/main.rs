@@ -61,16 +61,14 @@ fn main() {
         let mut visited = HashSet::new();
 
         loop {
-            if visited.contains(&position) {
-                return true;
-            }
-            visited.insert(position.clone());
-
             match position.direction {
                 Direction::Up => {
                     if position.y == 0 {
                         return false;
                     } else if map_clone[position.y - 1][position.x] != Tile::Empty {
+                        if !visited.insert(position.clone()) {
+                            return true;
+                        }
                         position.direction = Direction::Right;
                     } else {
                         position.y -= 1;
@@ -80,6 +78,9 @@ fn main() {
                     if position.y == map_clone.len() - 1 {
                         return false;
                     } else if map_clone[position.y + 1][position.x] != Tile::Empty {
+                        if !visited.insert(position.clone()) {
+                            return true;
+                        }
                         position.direction = Direction::Left;
                     } else {
                         position.y += 1;
@@ -89,6 +90,9 @@ fn main() {
                     if position.x == 0 {
                         return false;
                     } else if map_clone[position.y][position.x - 1] != Tile::Empty {
+                        if !visited.insert(position.clone()) {
+                            return true;
+                        }
                         position.direction = Direction::Up;
                     } else {
                         position.x -= 1;
@@ -98,6 +102,9 @@ fn main() {
                     if position.x == map_clone[0].len() - 1 {
                         return false;
                     } else if map_clone[position.y][position.x + 1] != Tile::Empty {
+                        if !visited.insert(position.clone()) {
+                            return true;
+                        }
                         position.direction = Direction::Down;
                     } else {
                         position.x += 1;
