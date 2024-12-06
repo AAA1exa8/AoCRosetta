@@ -1,10 +1,10 @@
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 enum Tile {
     Empty,
     Building,
-    Visited,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -37,7 +37,7 @@ fn main() {
                     '#' => Tile::Building,
                     '^' => {
                         guard = (j, i);
-                        Tile::Visited
+                        Tile::Empty
                     }
                     _ => panic!("invalid char"),
                 })
@@ -49,89 +49,72 @@ fn main() {
         y: guard.1,
         direction: Direction::Up,
     };
-    let mut position = starting_position;
-    let mut map = original_map.clone();
-    let mut distinct = 0;
-    for y_c in 0..map.len() {
-        'xloop: for x_c in 0..map[0].len() {
-            map = original_map.clone();
-            position = starting_position;
-            map[y_c][x_c] = Tile::Building;
-            if y_c == starting_position.y && x_c == starting_position.x {
-                continue 'xloop;
-            }
-            let mut visited = HashSet::new();
-            'inner: loop {
-                if visited.contains(&position) {
-                    distinct += 1;
-                    break 'inner;
-                }
-                match position.direction {
-                    Direction::Up => {
-                        if position.y == 0 {
-                            break;
-                        } else if Tile::Empty == map[position.y - 1][position.x]
-                            || Tile::Visited == map[position.y - 1][position.x]
-                        {
-                            visited.insert(position);
-                            position.y -= 1;
-                        } else {
-                            position.direction = Direction::Right;
-                        }
-                    }
-                    Direction::Down => {
-                        if position.y == map.len() - 1 {
-                            break;
-                        } else if Tile::Empty == map[position.y + 1][position.x]
-                            || Tile::Visited == map[position.y + 1][position.x]
-                        {
-                            visited.insert(position);
-                            position.y += 1;
-                        } else {
-                            position.direction = Direction::Left;
-                        }
-                    }
-                    Direction::Left => {
-                        if position.x == 0 {
-                            break;
-                        } else if Tile::Empty == map[position.y][position.x - 1]
-                            || Tile::Visited == map[position.y][position.x - 1]
-                        {
-                            visited.insert(position);
-                            position.x -= 1;
-                        } else {
-                            position.direction = Direction::Up;
-                        }
-                    }
-                    Direction::Right => {
-                        if position.x == map[0].len() - 1 {
-                            break;
-                        } else if Tile::Empty == map[position.y][position.x + 1]
-                            || Tile::Visited == map[position.y][position.x + 1]
-                        {
-                            visited.insert(position);
-                            position.x += 1;
-                        } else {
-                            position.direction = Direction::Down;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    println!("{}", distinct);
-}
+    let simulate_movement = |x_c: usize, y_c: usize| -> bool {
+        let mut map_clone = original_map.clone();
+        let mut position = starting_position.clone();
 
-fn print_map(map: &Vec<Vec<Tile>>) {
-    for row in map {
-        for tile in row {
-            match tile {
-                Tile::Empty => print!("."),
-                Tile::Building => print!("#"),
-                Tile::Visited => print!("X"),
+        if y_c == starting_position.y && x_c == starting_position.x {
+            return false;
+        }
+        map_clone[y_c][x_c] = Tile::Building;
+
+        let mut visited = HashSet::new();
+
+        loop {
+            if visited.contains(&position) {
+                return true;
+            }
+            visited.insert(position.clone());
+
+            match position.direction {
+                Direction::Up => {
+                    if position.y == 0 {
+                        return false;
+                    } else if map_clone[position.y - 1][position.x] != Tile::Empty {
+                        position.direction = Direction::Right;
+                    } else {
+                        position.y -= 1;
+                    }
+                }
+                Direction::Down => {
+                    if position.y == map_clone.len() - 1 {
+                        return false;
+                    } else if map_clone[position.y + 1][position.x] != Tile::Empty {
+                        position.direction = Direction::Left;
+                    } else {
+                        position.y += 1;
+                    }
+                }
+                Direction::Left => {
+                    if position.x == 0 {
+                        return false;
+                    } else if map_clone[position.y][position.x - 1] != Tile::Empty {
+                        position.direction = Direction::Up;
+                    } else {
+                        position.x -= 1;
+                    }
+                }
+                Direction::Right => {
+                    if position.x == map_clone[0].len() - 1 {
+                        return false;
+                    } else if map_clone[position.y][position.x + 1] != Tile::Empty {
+                        position.direction = Direction::Down;
+                    } else {
+                        position.x += 1;
+                    }
+                }
             }
         }
-        println!();
-    }
-    println!();
+    };
+
+    let distinct = (0..original_map.len())
+        .into_par_iter()
+        .map(|y_c| {
+            (0..original_map[0].len())
+                .into_par_iter()
+                .filter(|&x_c| simulate_movement(x_c, y_c))
+                .count()
+        })
+        .sum::<usize>();
+    println!("{}", distinct);
 }
