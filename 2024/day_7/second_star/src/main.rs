@@ -94,7 +94,7 @@ fn apply_op(a: usize, b: usize, op: Op) -> usize {
     match op {
         Op::Add => a + b,
         Op::Mul => a * b,
-        Op::Concat => format!("{}{}", b, a).parse().unwrap(),
+        Op::Concat => b * 10usize.pow(a.ilog10() + 1) + a,
     }
 }
 
