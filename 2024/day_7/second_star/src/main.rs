@@ -1,3 +1,6 @@
+use lru::LruCache;
+use rayon::prelude::*;
+use std::num::NonZeroUsize;
 use std::usize;
 
 struct Test {
@@ -27,60 +30,87 @@ fn main() {
         .collect();
 
     let mut acc = 0;
-    for test in values.iter() {
-        let result = try_test(test);
-        if result {
-            acc = acc + test.test;
-        }
-    }
+    // for test in values.iter() {
+    //     let (_, found) = brute_force(&test.values, test.test, &mut cache);
+    //     if found {
+    //         acc = acc + test.test;
+    //     }
+    // }
+    acc = values
+        .par_iter()
+        .map(|test| {
+            let size = NonZeroUsize::new(10000).unwrap();
+            let mut cache = LruCache::new(size);
+            let (_, found) = brute_force(&test.values, test.test, &mut cache);
+            if found {
+                return test.test;
+            }
+            return 0;
+        })
+        .sum();
     println!("{}", acc);
 }
 
-fn try_test(test: &Test) -> bool {
-    let operations = vec![Op::Add, Op::Mul, Op::Concat];
-    let operations = product(&operations, test.values.len() - 1);
-    operations
-        .iter()
-        .map(|ops| eval(&test.values, ops, test.test))
-        .any(|v| v == test.test)
-}
+// fn brute_force(numbers: &Vec<usize>, cache ) -> Vec<usize> {
+//     if numbers.len() == 1 {
+//         return vec![numbers[0]];
+//     }
+//     let mut a = Vec::new();
+//     for op in [Op::Add, Op::Mul, Op::Concat].iter() {
+//         for i in brute_force(&numbers[..numbers.len() - 1].to_vec()) {
+//             a.push(apply_op(numbers[numbers.len() - 1], i, *op));
+//         }
+//     }
+//     return a;
+// }
 
-fn eval(values: &[usize], operations: &[Op], expected: usize) -> usize {
-    let mut acc = values[0];
-    for (i, value) in values.iter().enumerate().skip(1) {
-        match operations[i - 1] {
-            Op::Add => acc = acc + value,
-            Op::Mul => acc = acc * value,
-            Op::Concat => acc = usize::from_str_radix(&format!("{}{}", acc, value), 10).unwrap(),
+fn brute_force(
+    numbers: &Vec<usize>,
+    expected: usize,
+    cache: &mut LruCache<Vec<usize>, Vec<usize>>,
+) -> (Vec<usize>, bool) {
+    if numbers.len() == 1 {
+        return (vec![numbers[0]], numbers[0] == expected);
+    }
+    if let Some(v) = cache.get(numbers) {
+        return (v.clone(), v.contains(&expected));
+    }
+    let mut a = Vec::new();
+    for op in [Op::Add, Op::Mul, Op::Concat].iter() {
+        let (ress, found) = brute_force(&numbers[..numbers.len() - 1].to_vec(), expected, cache);
+        if found {
+            return (ress, true);
         }
-        if acc > expected {
-            return 0;
+        for i in ress {
+            a.push(apply_op(numbers[numbers.len() - 1], i, *op));
         }
     }
-    acc
+    cache.put(numbers.clone(), a.clone());
+    let found = a.contains(&expected);
+    return (a, found);
 }
 
-fn product<T>(iterable: &[T], repeat: usize) -> Vec<Vec<T>>
-where
-    T: Copy,
-{
-    let mut pools: Vec<Vec<T>> = Vec::new();
-    for _ in 0..repeat {
-        pools.push(iterable.to_vec());
+fn apply_op(a: usize, b: usize, op: Op) -> usize {
+    match op {
+        Op::Add => a + b,
+        Op::Mul => a * b,
+        Op::Concat => format!("{}{}", b, a).parse().unwrap(),
     }
-
-    let mut result: Vec<Vec<T>> = Vec::new();
-    result.push(Vec::new());
-    for pool in pools.iter() {
-        let mut new_result: Vec<Vec<T>> = Vec::new();
-        for x in result.iter() {
-            for y in pool.iter() {
-                let mut new_x = x.clone();
-                new_x.push(*y);
-                new_result.push(new_x);
-            }
-        }
-        result = new_result;
-    }
-    result
 }
+
+// ops = [
+//     lambda a, b: a + b,
+//     lambda a, b: a * b,
+//     lambda a, b: int(str(a) + str(b))
+// ]
+//
+// @functools.lru_cache(maxsize=None)
+// def bruteforce(numbers):
+//     if len(numbers) == 1:
+//         return [numbers[0]]
+//     a = []
+//     for op in ops:
+//         for i in bruteforce(numbers[:-1]):
+//             a.append(op(numbers[-1], i))
+//     return tuple(a)
+//
