@@ -10,8 +10,6 @@ impl CPU {
     fn cycle(&mut self) -> bool {
         let opcode = self.program[self.pc * 2];
         let operand = self.program[self.pc * 2 + 1];
-        println!("{:?}", self.registers);
-        println!("{}, {}", opcode, operand);
         match opcode {
             0 => match operand {
                 0..=3 => {
@@ -79,7 +77,6 @@ impl CPU {
             x => unreachable!("Invalid opcode {}", x),
         }
         self.pc += 1;
-        println!("{:?}, len: {}", self.pc, self.program.len());
         self.pc * 2 < self.program.len()
     }
 }
@@ -108,7 +105,6 @@ fn main() {
         program,
         out: String::new(),
     };
-    println!("{:#?}", cpu);
     while cpu.cycle() {}
     println!("{}", cpu.out);
 }
